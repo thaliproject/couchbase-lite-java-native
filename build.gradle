@@ -23,9 +23,13 @@ model {
             operatingSystem "windows"
         }
     }
-	toolChains {
-		gcc(Gcc)
-	}
+
+
+    toolChains {
+        gcc(Gcc)
+        clang(Clang)
+        visualCpp(VisualCpp)
+    }
 }
 
 sources {
