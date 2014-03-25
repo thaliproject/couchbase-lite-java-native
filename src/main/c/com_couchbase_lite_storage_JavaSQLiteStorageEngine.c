@@ -380,7 +380,7 @@ JNIEXPORT void JNICALL Java_com_couchbase_lite_storage_JavaSQLiteStorageEngine_b
 		return;
 	}
 
-	const char * sql = "BEGIN";
+	const char * sql = "SAVEPOINT foo"; //"BEGIN";
 	char * error;
 	int status = sqlite3_exec(db, sql, 0, 0, &error);
 	if (status != SQLITE_OK) {
@@ -403,7 +403,7 @@ JNIEXPORT void JNICALL Java_com_couchbase_lite_storage_JavaSQLiteStorageEngine__
 		return;
 	}
 
-	const char * sql = "COMMIT";
+	const char * sql = "RELEASE SAVEPOINT foo"; //"COMMIT";
 	char * error;
 	int status = sqlite3_exec(db, sql, 0, 0, &error);
 	if (status != SQLITE_OK) {
@@ -426,7 +426,7 @@ JNIEXPORT void JNICALL Java_com_couchbase_lite_storage_JavaSQLiteStorageEngine__
 		return;
 	}
 
-	const char * sql = "ROLLBACK";
+	const char * sql = "ROLLBACK TRANSACTION TO SAVEPOINT foo"; //"ROLLBACK";
 	char * error;
 	int status = sqlite3_exec(db, sql, 0, 0, &error);
 	if (status != SQLITE_OK) {
