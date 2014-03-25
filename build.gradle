@@ -1,6 +1,6 @@
 apply plugin: 'c'
 apply plugin: 'java'
-apply plugin: 'maven'
+apply plugin: 'maven'  //  https://github.com/couchbase/couchbase-lite-java-native/issues/2
 
 version = '1.0'
 
@@ -91,6 +91,7 @@ binaries.withType(SharedLibraryBinary) { binary ->
     jar.dependsOn builderTask
 }
 
+// Both mavenPath and the changes to uploadArchives are covered by https://github.com/couchbase/couchbase-lite-java-native/issues/2
 def mavenPath() {
     artifactory_local == "true" ?
             'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath :
@@ -120,6 +121,7 @@ uploadArchives {
     }
 }
 
+// sourcesJar and artifacts are https://github.com/couchbase/couchbase-lite-java-native/issues/5
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.java.srcDirs
