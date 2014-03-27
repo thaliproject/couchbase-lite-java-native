@@ -395,7 +395,7 @@ JNIEXPORT void JNICALL Java_com_couchbase_lite_storage_JavaSQLiteStorageEngine__
 		return;
 	}
 
-	const char * sql = "SAVEPOINT foo"; //"BEGIN"; Possible fix for https://github.com/couchbase/couchbase-lite-java/issues/1
+	const char * sql = "BEGIN";
 	char * error;
 	int status = sqlite3_exec(db, sql, 0, 0, &error);
 	if (status != SQLITE_OK) {
@@ -420,7 +420,7 @@ JNIEXPORT void JNICALL Java_com_couchbase_lite_storage_JavaSQLiteStorageEngine__
 		return;
 	}
 
-	const char * sql = "RELEASE SAVEPOINT foo"; //"COMMIT"; Possible fix for https://github.com/couchbase/couchbase-lite-java/issues/1
+	const char * sql = "COMMIT";
 	char * error;
 	int status = sqlite3_exec(db, sql, 0, 0, &error);
 	if (status != SQLITE_OK) {
@@ -443,7 +443,7 @@ JNIEXPORT void JNICALL Java_com_couchbase_lite_storage_JavaSQLiteStorageEngine__
 		return;
 	}
 
-	const char * sql = "ROLLBACK TRANSACTION TO SAVEPOINT foo"; //"ROLLBACK"; Possible fix for https://github.com/couchbase/couchbase-lite-java/issues/1
+	const char * sql = "ROLLBACK";
 	char * error;
 	int status = sqlite3_exec(db, sql, 0, 0, &error);
 	if (status != SQLITE_OK) {

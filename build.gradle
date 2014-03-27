@@ -91,13 +91,14 @@ binaries.withType(SharedLibraryBinary) { binary ->
     jar.dependsOn builderTask
 }
 
-// Both mavenPath and the changes to uploadArchives are covered by https://github.com/couchbase/couchbase-lite-java-native/issues/2
+// https://github.com/couchbase/couchbase-lite-java-native/issues/6
 def mavenPath() {
     artifactory_local == "true" ?
             'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath :
             artifactory_contextUrl + "/libs-release-local"
 }
 
+// https://github.com/couchbase/couchbase-lite-java-native/issues/2
 uploadArchives {
     repositories {
         mavenDeployer {
