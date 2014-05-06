@@ -69,7 +69,16 @@ static ValueType valueTypeOf(char c) {
 		return kFalse;
 	case 't':
 		return kTrue;
-	case '0' ... '9':
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
 	case '-':
 		return kNumber;
 	case '"':
@@ -88,7 +97,6 @@ static ValueType valueTypeOf(char c) {
 		return kObject;
 	default:
 		// TODO: How/should we log unexpected characters?
-
 		return kIllegal;
 	}
 }
@@ -215,8 +223,27 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
     const char* str1 = createStringFromJSON(in1);
 	const char* str2 = createStringFromJSON(in2);
 
-
 	return uca_string_compare(str1, str2);
+}
+
+static double readNumber(const char* start, const char* end, char** endOfNumber) {
+    // First copy the string into a zero-terminated buffer so we can safely call strtod:
+    size_t len = end - start;
+    char buf[50];
+    char* str = (len < sizeof(buf)) ? buf : (char*) malloc(len + 1);
+    if (!str) {
+        return 0.0;
+    }
+    memcpy(str, start, len);
+    str[len] = '\0';
+
+    char* endInStr;
+    double result = strtod(str, &endInStr);
+    *endOfNumber = (char*)start + (endInStr - str);
+    if (str != buf) {
+        free(str);
+    }
+    return result;
 }
 
 // SQLite collation function for JSON-formatted strings.
@@ -254,12 +281,16 @@ int collateJSON(void *context, int len1, const void * chars1, int len2, const vo
 				break;
 			case kNumber: {
 				char* next1, *next2;
-				int diff = dcmp(strtod(str1, &next1), strtod(str2, &next2));
-				if (diff) {
-					// Numbers don't match
-					return diff;
-				}
-
+				int diff;
+                if (depth == 0) {
+                    diff = dcmp( readNumber(str1, str1 + len1, &next1),
+                                 readNumber(str2, str2 + len2, &next2) );
+                } else {
+                	diff = dcmp(strtod(str1, &next1), strtod(str2, &next2));
+                }
+                if (diff) {
+                    return diff; // Numbers don't match
+                }
 				str1 = next1;
 				str2 = next2;
 				break;
@@ -313,3 +344,28 @@ void sqlite_json_collator_init(sqlite3 * db, int (*unicode_string_compare)(const
 	sqlite3_create_collation(db, "JSON_ASCII", SQLITE_UTF8, sqlite_json_colator_ASCII, collateJSON);
 }
 
+// Setup Unicode String Comparison Method
+void sqlite_json_collator_setUnicodeStringCompare(int (*unicode_string_compare)(const char *, const char*)) {
+	uca_string_compare = unicode_string_compare;
+}
+
+// Test method.
+int sqlite_json_collator_test(void *mode, const char * str1, const char * str2) {
+	// Be evil and put numeric garbage past the ends of str1 and str2 (see bug #138):
+	size_t len1 = strlen(str1), len2 = strlen(str2);
+    char* buf1 = (char*) malloc(len1 + 3);
+	char* buf2 = (char*) malloc(len2 + 3);
+
+	strcpy(buf1, str1);
+	strcat(buf1, "99");
+
+	strcpy(buf2, str2);
+	strcat(buf2, "88");
+
+    int result = collateJSON(mode, (int)len1, buf1, (int)len2, buf2);
+
+    free(buf1);
+    free(buf2);
+
+    return result;
+}

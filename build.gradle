@@ -1,8 +1,8 @@
 apply plugin: 'c'
 apply plugin: 'java'
-apply plugin: 'maven'  //  https://github.com/couchbase/couchbase-lite-java-native/issues/2
+apply plugin: 'maven'
 
-version = '1.0'
+version = System.getProperty("UPLOAD_VERSION_CBLITE")
 
 model {
     platforms {
@@ -18,17 +18,28 @@ model {
             architecture "x86"
             operatingSystem "linux"
         }
+        linux_x86_64 {
+            architecture "x86_64"
+            operatingSystem "linux"
+        }
         windows_x86 {
             architecture "x86"
             operatingSystem "windows"
         }
+        windows_x86_64 {
+            architecture "x86_64"
+            operatingSystem "windows"
+        }
+        windows_amd64 {
+            architecture "amd64"
+            operatingSystem "windows"
+        }
     }
 
-
     toolChains {
+        //visualCpp(VisualCpp) - https://github.com/couchbase/couchbase-lite-java-native/issues/1
         gcc(Gcc)
         clang(Clang)
-        visualCpp(VisualCpp)
     }
 }
 
@@ -51,8 +62,6 @@ libraries {
     }
 
     all {
-        targetPlatforms "osx_x86", "osx_x86_64", "linux_x86", "windows_x86"
-
         binaries.withType(SharedLibraryBinary) { binary ->
             if (targetPlatform.operatingSystem.macOsX) {
                 cCompiler.args '-I', "/System/Library/Frameworks/JavaVM.framework/Headers"
@@ -98,15 +107,34 @@ def mavenPath() {
             artifactory_contextUrl + "/libs-release-local"
 }
 
-// https://github.com/couchbase/couchbase-lite-java-native/issues/2
+task createMavenDirectory(type: Exec) {
+    ext {
+        uploadUser = System.getenv("MAVEN_UPLOAD_USERNAME") + ":" + System.getenv("MAVEN_UPLOAD_PASSWORD")
+        mkcolPath  = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
+    }
+    commandLine "curl", "--user", uploadUser, "-X", "MKCOL", mkcolPath
+}
+
+// this hack is only needed for apache mod_dav based Maven repo's like file.couchbase.com.  otherwise, skip it
+createMavenDirectory.onlyIf { System.getenv("MAVEN_UPLOAD_REPO_URL").contains("files") }
+
+// first create the directory, then do the upload
+task uploadArchivesWrapper(dependsOn: createMavenDirectory) << {
+    uploadArchives.execute()
+}
+
+// this will upload, but will not first create a directory (which is needed on some servers)
 uploadArchives {
     repositories {
         mavenDeployer {
+            //repository(url: System.getenv("MAVEN_UPLOAD_REPO_URL")) {
+            //    authentication(userName: System.getenv("MAVEN_UPLOAD_USERNAME"), password: System.getenv("MAVEN_UPLOAD_PASSWORD"))
+			// https://github.com/couchbase/couchbase-lite-java-native/issues/6
             repository(url: mavenPath()) {
                 authentication(userName: "${artifactory_user}", password: "${artifactory_password}")
             }
-
-            pom.version = "${System.properties['UPLOAD_VERSION_CBLITE']}"
+            //pom.version = System.getenv("MAVEN_UPLOAD_VERSION")
+			pom.version = "${System.properties['UPLOAD_VERSION_CBLITE']}" // https://github.com/couchbase/couchbase-lite-java-native/issues/9
             pom.groupId = 'com.couchbase.lite'
             pom.artifactId = 'java-native'
             pom.project {
@@ -122,7 +150,6 @@ uploadArchives {
     }
 }
 
-// sourcesJar and artifacts are https://github.com/couchbase/couchbase-lite-java-native/issues/5
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.java.srcDirs
