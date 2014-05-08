@@ -2,7 +2,7 @@ apply plugin: 'c'
 apply plugin: 'java'
 apply plugin: 'maven'
 
-version = System.getProperty("UPLOAD_VERSION_CBLITE")
+version = System.getProperty("MAVEN_UPLOAD_VERSION") // https://github.com/couchbase/couchbase-lite-java-native/issues/9
 
 model {
     platforms {
@@ -133,8 +133,7 @@ uploadArchives {
             repository(url: mavenPath()) {
                 authentication(userName: "${artifactory_user}", password: "${artifactory_password}")
             }
-            //pom.version = System.getenv("MAVEN_UPLOAD_VERSION")
-			pom.version = "${System.properties['UPLOAD_VERSION_CBLITE']}" // https://github.com/couchbase/couchbase-lite-java-native/issues/9
+            pom.version = version
             pom.groupId = 'com.couchbase.lite'
             pom.artifactId = 'java-native'
             pom.project {
