@@ -37,7 +37,7 @@ model {
     }
 
     toolChains {
-        //visualCpp(VisualCpp) - https://github.com/couchbase/couchbase-lite-java-native/issues/1
+        visualCpp(VisualCpp)
         gcc(Gcc)
         clang(Clang)
     }
