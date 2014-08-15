@@ -98,14 +98,14 @@ binaries.withType(SharedLibraryBinary) { binary ->
 
 task createMavenDirectory(type: Exec) {
     ext {
-        uploadUser = System.getProperty("MAVEN_UPLOAD_USERNAME") + ":" + System.getProperty("MAVEN_UPLOAD_PASSWORD")
-        mkcolPath  = System.getProperty("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
+        uploadUser = System.getenv("MAVEN_UPLOAD_USERNAME") + ":" + System.getenv("MAVEN_UPLOAD_PASSWORD")
+        mkcolPath = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
     }
     commandLine "curl", "--user", uploadUser, "-X", "MKCOL", mkcolPath
 }
 
 // this hack is only needed for apache mod_dav based Maven repo's like file.couchbase.com.  otherwise, skip it
-createMavenDirectory.onlyIf { System.getProperty("MAVEN_UPLOAD_REPO_URL").contains("files") }
+createMavenDirectory.onlyIf { System.getenv("MAVEN_UPLOAD_REPO_URL").contains("files") }
 
 // first create the directory, then do the upload
 task uploadArchivesWrapper(dependsOn: createMavenDirectory) << {
