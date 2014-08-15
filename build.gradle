@@ -96,23 +96,16 @@ binaries.withType(SharedLibraryBinary) { binary ->
     jar.dependsOn builderTask
 }
 
-// https://github.com/couchbase/couchbase-lite-java-native/issues/6
-def mavenPath() {
-    artifactory_local == "true" ?
-            'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath :
-            artifactory_contextUrl + "/libs-release-local"
-}
-
 task createMavenDirectory(type: Exec) {
     ext {
-        uploadUser = System.getenv("MAVEN_UPLOAD_USERNAME") + ":" + System.getenv("MAVEN_UPLOAD_PASSWORD")
-        mkcolPath  = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
+        uploadUser = System.getProperty("MAVEN_UPLOAD_USERNAME") + ":" + System.getProperty("MAVEN_UPLOAD_PASSWORD")
+        mkcolPath  = System.getProperty("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
     }
     commandLine "curl", "--user", uploadUser, "-X", "MKCOL", mkcolPath
 }
 
 // this hack is only needed for apache mod_dav based Maven repo's like file.couchbase.com.  otherwise, skip it
-createMavenDirectory.onlyIf { System.getenv("MAVEN_UPLOAD_REPO_URL").contains("files") }
+createMavenDirectory.onlyIf { System.getProperty("MAVEN_UPLOAD_REPO_URL").contains("files") }
 
 // first create the directory, then do the upload
 task uploadArchivesWrapper(dependsOn: createMavenDirectory) << {
@@ -126,9 +119,10 @@ uploadArchives {
             //repository(url: System.getenv("MAVEN_UPLOAD_REPO_URL")) {
             //    authentication(userName: System.getenv("MAVEN_UPLOAD_USERNAME"), password: System.getenv("MAVEN_UPLOAD_PASSWORD"))
 			// https://github.com/couchbase/couchbase-lite-java-native/issues/6
-            repository(url: mavenPath()) {
-                authentication(userName: "${artifactory_user}", password: "${artifactory_password}")
+            repository(url: System.getProperty('MAVEN_UPLOAD_REPO_URL')) {
+				authentication(userName: System.getProperty('MAVEN_UPLOAD_USERNAME'), password: System.getProperty('MAVEN_UPLOAD_PASSWORD'))
             }
+
             pom.version = version
             pom.groupId = 'com.couchbase.lite'
             pom.artifactId = 'java-native'
