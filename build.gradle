@@ -96,17 +96,10 @@ binaries.withType(SharedLibraryBinary) { binary ->
     jar.dependsOn builderTask
 }
 
-// https://github.com/couchbase/couchbase-lite-java-native/issues/6
-def mavenPath() {
-    artifactory_local == "true" ?
-            'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath :
-            artifactory_contextUrl + "/libs-release-local"
-}
-
 task createMavenDirectory(type: Exec) {
     ext {
         uploadUser = System.getenv("MAVEN_UPLOAD_USERNAME") + ":" + System.getenv("MAVEN_UPLOAD_PASSWORD")
-        mkcolPath  = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
+        mkcolPath = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-native/" + version + "/"
     }
     commandLine "curl", "--user", uploadUser, "-X", "MKCOL", mkcolPath
 }
@@ -126,9 +119,10 @@ uploadArchives {
             //repository(url: System.getenv("MAVEN_UPLOAD_REPO_URL")) {
             //    authentication(userName: System.getenv("MAVEN_UPLOAD_USERNAME"), password: System.getenv("MAVEN_UPLOAD_PASSWORD"))
 			// https://github.com/couchbase/couchbase-lite-java-native/issues/6
-            repository(url: mavenPath()) {
-                authentication(userName: "${artifactory_user}", password: "${artifactory_password}")
+            repository(url: System.getProperty('MAVEN_UPLOAD_REPO_URL')) {
+				authentication(userName: System.getProperty('MAVEN_UPLOAD_USERNAME'), password: System.getProperty('MAVEN_UPLOAD_PASSWORD'))
             }
+
             pom.version = version
             pom.groupId = 'com.couchbase.lite'
             pom.artifactId = 'java-native'
