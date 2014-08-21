@@ -3,6 +3,9 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 version = System.getProperty("MAVEN_UPLOAD_VERSION") // https://github.com/couchbase/couchbase-lite-java-native/issues/9
+group = 'com.couchbase.lite'
+archivesBaseName = 'java-native'
+
 
 model {
     platforms {
@@ -123,9 +126,6 @@ uploadArchives {
 				authentication(userName: System.getProperty('MAVEN_UPLOAD_USERNAME'), password: System.getProperty('MAVEN_UPLOAD_PASSWORD'))
             }
 
-            pom.version = version
-            pom.groupId = 'com.couchbase.lite'
-            pom.artifactId = 'java-native'
             pom.project {
                 licenses {
                     license {
