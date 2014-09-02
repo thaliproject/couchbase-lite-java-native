@@ -1,0 +1,42 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+
+version = System.getProperty('MAVEN_UPLOAD_VERSION')
+group = 'com.couchbase.lite'
+archivesBaseName = 'java-native'
+
+repositories {
+    mavenLocal()
+    maven { url "http://thaliartifactory.cloudapp.net/artifactory/libs-snapshot" }
+    maven { url "http://thaliartifactory.cloudapp.net/artifactory/libs-release" }
+}
+
+dependencies {
+    compile 'com.couchbase.lite:java-native:' + version + ':windows'
+    compile 'com.couchbase.lite:java-native:' + version + ':linux'
+}
+
+jar { 
+    from sourceSets.main.output 
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+} 
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: System.getProperty('MAVEN_UPLOAD_REPO_URL')) {
+                authentication(userName: System.getProperty('MAVEN_UPLOAD_USERNAME'), password: System.getProperty('MAVEN_UPLOAD_PASSWORD')) 
+            }
+
+            pom.project {
+                licenses {
+                    license {
+                        name 'Couchbase Community Edition License Agreement'
+                        url 'http://www.couchbase.com/agreement/community'
+                        distribution 'repo'
+                    }
+                }
+            }
+        }
+    }
+}
