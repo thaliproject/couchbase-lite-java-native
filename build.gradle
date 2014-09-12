@@ -4,11 +4,7 @@ apply plugin: 'maven'
 
 version = System.getProperty("MAVEN_UPLOAD_VERSION") // https://github.com/couchbase/couchbase-lite-java-native/issues/9
 group = 'com.couchbase.lite'
-archivesBaseName = 'java-native'
-
-project.ext {
-    os = System.getProperty('os.name').toLowerCase().split(" ", 2)[0]
-}
+archivesBaseName = 'java-native-' + System.getProperty('os.name').toLowerCase().split(" ", 2)[0]
 
 model {
     platforms {
@@ -99,12 +95,7 @@ binaries.withType(SharedLibraryBinary) { binary ->
         from builderTask.outputFile
     }
 
-    nativeJar.into("native/${targetPlatform.operatingSystem.name}/${targetPlatform.architecture.name}") {
-        from builderTask.outputFile
-    }
-
     jar.dependsOn builderTask
-    nativeJar.dependsOn builderTask
 }
 
 task createMavenDirectory(type: Exec) {
@@ -150,13 +141,6 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.java.srcDirs
 }
 
-task nativeJar(type: Jar, dependsOn: classes) {
-    classifier = os
-    from sourceSets.main.java.srcDirs
-}
-
 artifacts {
-    archives jar
     archives sourcesJar
-    archives nativeJar
 }

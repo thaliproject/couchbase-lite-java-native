@@ -12,8 +12,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.couchbase.lite:java-native:' + version + ':windows'
-    compile 'com.couchbase.lite:java-native:' + version + ':linux'
+    compile 'com.couchbase.lite:java-native-windows:' + version
+    compile 'com.couchbase.lite:java-native-linux:' + version
     // Uncomment once build system updated with Mac builds
     // compile 'com.couchbase.lite:java-native:' + version + ':mac'
 }
