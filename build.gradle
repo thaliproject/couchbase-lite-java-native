@@ -4,8 +4,7 @@ apply plugin: 'maven'
 
 version = System.getProperty("MAVEN_UPLOAD_VERSION") // https://github.com/couchbase/couchbase-lite-java-native/issues/9
 group = 'com.couchbase.lite'
-archivesBaseName = 'java-native'
-
+archivesBaseName = 'java-native-' + System.getProperty('os.name').toLowerCase().split(" ", 2)[0]
 
 model {
     platforms {
@@ -93,7 +92,7 @@ binaries.withType(SharedLibraryBinary) { binary ->
     def builderTask = binary.tasks.builder
 
     jar.into("native/${targetPlatform.operatingSystem.name}/${targetPlatform.architecture.name}") {
-            from builderTask.outputFile
+        from builderTask.outputFile
     }
 
     jar.dependsOn builderTask
@@ -119,8 +118,6 @@ task uploadArchivesWrapper(dependsOn: createMavenDirectory) << {
 uploadArchives {
     repositories {
         mavenDeployer {
-            //repository(url: System.getenv("MAVEN_UPLOAD_REPO_URL")) {
-            //    authentication(userName: System.getenv("MAVEN_UPLOAD_USERNAME"), password: System.getenv("MAVEN_UPLOAD_PASSWORD"))
 			// https://github.com/couchbase/couchbase-lite-java-native/issues/6
             repository(url: System.getProperty('MAVEN_UPLOAD_REPO_URL')) {
 				authentication(userName: System.getProperty('MAVEN_UPLOAD_USERNAME'), password: System.getProperty('MAVEN_UPLOAD_PASSWORD'))
